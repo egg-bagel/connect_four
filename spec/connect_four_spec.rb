@@ -106,4 +106,23 @@ describe Game do
 
   end
 
+  describe "#switch_players" do
+    subject(:game_switch) { described_class.new() }
+
+    context "when @to_play_next is @player_one" do
+      it "sets @to_play_next to @player_two" do
+        game_switch.switch_players
+        expect(game_switch.to_play_next).to eq(game_switch.player_two)
+      end
+    end
+
+    context "when @to_play_next is @player_two" do
+      it "sets @to_play_next to @player_one" do
+        game_switch.to_play_next = game_switch.player_two
+        game_switch.switch_players
+        expect(game_switch.to_play_next).to eq(game_switch.player_one)
+      end
+    end
+  end
+
 end

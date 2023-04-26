@@ -1,64 +1,48 @@
-#The connect four game consists of:
-#A seven-column, six-row grid that is the playing board
-#Two players and their symbols
-#The object of the game is to get four tokens in a row.
-
-#Here is my template for creating Player objects.
-#What can a Player do, and what does a Player know? 
-#Iirc from tic tac toe, the Player class is mainly useful for keeping track of
-#whose turn it is.
-#Maybe I am going to need a separate class for a computer player?
 class Player
-  def initialize
+
+  attr_accessor :token
+
+  def initialize(token)
+    @token = token
   end
+
 end
-
-#Game is going to need:
-#A play function that loops until the game is over
-#A place marker function
-#A game over function that checks if a player has won
-
-#First I am going to write the game for two human players.
-#then I will add the option of a computer player 
 
 class Game
 
-  attr_accessor :board
-  #Whenever we have a new game, we have a new board and two new players
+  attr_accessor :board, :player_one, :player_two, :to_play_next
+
   def initialize
-    #@board[0][0] is top left.
-    #@board[5][6] is bottom right.
     @board = [ [" ", " ", " ", " ", " ", " ", " "],
                [" ", " ", " ", " ", " ", " ", " "],
                [" ", " ", " ", " ", " ", " ", " "],
                [" ", " ", " ", " ", " ", " ", " "],
                [" ", " ", " ", " ", " ", " ", " "],
                [" ", " ", " ", " ", " ", " ", " "] ]
-    @player_one = Player.new
-    @player_two = Player.new
+    @player_one = Player.new("x")
+    @player_two = Player.new("o")
+    @to_play_next = @player_one
   end
 
-  #What happens in the play function?
-  #The play function runs until a win condition is met.
-  #This must be checked each turn with a loop.
-  #The player is prompted to choose a column.
-  #The player's token is inserted in the lowest empty spot in that column.
-  #If the board does not contain four in a row, it is the other player's turn.
   def play
     while !game_over?
       print_board
+      announce_turn       
       column_index = get_player_input - 1
       bottom_empty_row_index = find_empty_square(column_index)
       place_token(bottom_empty_row_index, column_index)
+      switch_players
     end
+
     print_board
-    puts "Four in a row!"
+    if @to_play_next == @player_two
+      puts "Player One wins with four in a row!"
+    else
+      puts "Player Two wins with four in a row!"
+    end
   end
 
-  #winning combinations:
-  #row number is the same and column numbers are sequential
-  #column number is the same and row numbers are sequential
-  #both row and column numbers are sequential
+  #checks win conditions
   def game_over?
     if horizontal_win?
       return true
@@ -78,7 +62,11 @@ class Game
     while i < 6
       j = 0
       while j < 4
-        if @board[i][j..(j + 3)].all? { |x| x == "x" }
+        if (@board[i][j] == @player_one.token) && (@board[i][j + 1] == @player_one.token) &&
+           (@board[i][j + 2] == @player_one.token) && (@board[i][j + 3] == @player_one.token)
+          return true
+        elsif (@board[i][j] == @player_two.token) && (@board[i][j + 1] == @player_two.token) &&
+              (@board[i][j + 2] == @player_two.token) && (@board[i][j + 3] == @player_two.token)
           return true
         end
         j += 1
@@ -93,8 +81,11 @@ class Game
     while i < 3
       j = 0
       while j < 7
-        if (@board[i][j] == "x") && (@board[i + 1][j] == "x") && 
-           (@board[i + 2][j] == "x") && (@board[i + 3][j] == "x")
+        if (@board[i][j] == @player_one.token) && (@board[i + 1][j] == @player_one.token) && 
+           (@board[i + 2][j] == @player_one.token) && (@board[i + 3][j] == @player_one.token)
+          return true
+        elsif (@board[i][j] == @player_two.token) && (@board[i + 1][j] == @player_two.token) && 
+              (@board[i + 2][j] == @player_two.token) && (@board[i + 3][j] == @player_two.token)
           return true
         end
         j += 1
@@ -109,8 +100,11 @@ class Game
     while i < 3
       j = 0
       while j < 4
-        if (@board[i][j] == "x") && (@board[i + 1][j + 1] == "x") &&
-           (@board[i + 2][j + 2] == "x") && (@board[i + 3][j + 3] == "x")
+        if (@board[i][j] == @player_one.token) && (@board[i + 1][j + 1] == @player_one.token) &&
+           (@board[i + 2][j + 2] == @player_one.token) && (@board[i + 3][j + 3] == @player_one.token)
+          return true
+        elsif (@board[i][j] == @player_two.token) && (@board[i + 1][j + 1] == @player_two.token) &&
+              (@board[i + 2][j + 2] == @player_two.token) && (@board[i + 3][j + 3] == @player_two.token)
           return true
         end
         j += 1
@@ -125,9 +119,11 @@ class Game
     while i < 3
       j = 7
       while j > 2
-        if (@board[i][j] == "x") && (@board[i + 1][j - 1] == "x") &&
-           (@board[i + 2][j - 2] == "x") && (@board[i + 3][j - 3] == "x")
+        if (@board[i][j] == @player_one.token) && (@board[i + 1][j - 1] == @player_one.token) &&
+           (@board[i + 2][j - 2] == @player_one.token) && (@board[i + 3][j - 3] == @player_one.token)
               return true
+        elsif (@board[i][j] == @player_two.token) && (@board[i + 1][j - 1] == @player_two.token) &&
+              (@board[i + 2][j - 2] == @player_two.token) && (@board[i + 3][j - 3] == @player_two.token)
         end
         j -= 1
       end
@@ -136,10 +132,20 @@ class Game
     return false
   end
 
-  def place_token(row, column)
-    @board[row][column] = "x"
+  def announce_turn
+    if @to_play_next == @player_one
+      puts "Player One to play"
+    elsif @to_play_next == @player_two
+      puts "Player Two to play"
+    end
   end
 
+  #Marks the player's chosen square with their token
+  def place_token(row, column)
+    @board[row][column] = @to_play_next.token
+  end
+
+  #Prompts the player to choose a column for their token
   def get_player_input
     puts "What column do you want to drop your piece into? Enter a number 1-7:"
     column = gets.chomp.to_i
@@ -163,6 +169,15 @@ class Game
     return nil
   end
 
+  def switch_players
+    if @to_play_next == @player_one
+      @to_play_next = @player_two
+    elsif @to_play_next == @player_two
+      @to_play_next = player_one
+    end
+    return @to_play_next
+  end
+
   #Prints the current board state to the screen
   def print_board
     print "+---+---+---+---+---+---+---+\n"
@@ -178,5 +193,10 @@ class Game
 
 end
 
-game = Game.new
-game.play
+play_again = "Y"
+while play_again == "Y"
+  game = Game.new
+  game.play
+  puts "Would you like to play again? Enter Y/N:"
+  play_again = gets.chomp.upcase
+end

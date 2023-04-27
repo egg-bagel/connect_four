@@ -1,1 +1,1 @@
-
+The goal of this exercise was to practice TDD by building Connect Four. I used Rspec to write the tests. 

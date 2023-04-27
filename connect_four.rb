@@ -8,6 +8,20 @@ class Player
 
 end
 
+
+class ComputerPlayer
+
+  attr_accessor :token
+
+  def initialize(token)
+    @token = token
+  end
+
+  def random_number
+    rand(1..7)
+  end
+end
+
 class Game
 
   attr_accessor :board, :player_one, :player_two, :to_play_next
@@ -20,26 +34,55 @@ class Game
                [" ", " ", " ", " ", " ", " ", " "],
                [" ", " ", " ", " ", " ", " ", " "] ]
     @player_one = Player.new("x")
-    @player_two = Player.new("o")
+    @player_two = nil
+    @human_opponent = false
     @to_play_next = @player_one
   end
 
+  #main function that plays the game until someone wins
   def play
+    choose_opponent
     while !game_over?
       print_board
-      announce_turn       
-      column_index = get_player_input - 1
+      announce_turn
+      if (@to_play_next == @player_one || @human_opponent == true)   
+        column_index = get_player_input - 1
+      else
+        column_index = @player_two.random_number - 1
+      end
       bottom_empty_row_index = find_empty_square(column_index)
       place_token(bottom_empty_row_index, column_index)
       switch_players
     end
 
     print_board
+
     if @to_play_next == @player_two
       puts "Player One wins with four in a row!"
     else
       puts "Player Two wins with four in a row!"
     end
+  end
+
+  #sets @player_two as a human opponent or a computer opponent
+  def choose_opponent
+    puts "Welcome to my Connect Four game!"
+    puts "If you would like to play against a computer opponent, enter 1."
+    puts "If you would like to play against another person, enter 2."
+    opponent_choice = gets.chomp.to_i
+
+    while opponent_choice != 1 && opponent_choice != 2
+      puts "Invalid input! Please enter 1 to play against the computer or 2 to play against a human opponent."
+      opponent_choice = gets.chomp.to_i
+    end
+
+    if opponent_choice == 1
+      @player_two = ComputerPlayer.new("o")
+    else
+      @player_two = Player.new("o")
+      @human_opponent = true
+    end
+
   end
 
   #checks win conditions
@@ -145,7 +188,7 @@ class Game
     @board[row][column] = @to_play_next.token
   end
 
-  #Prompts the player to choose a column for their token
+  #Prompts the human player(s) to choose a row for their token
   def get_player_input
     puts "What column do you want to drop your piece into? Enter a number 1-7:"
     column = gets.chomp.to_i
@@ -169,6 +212,7 @@ class Game
     return nil
   end
 
+  #Switches whose turn it is to play next
   def switch_players
     if @to_play_next == @player_one
       @to_play_next = @player_two
